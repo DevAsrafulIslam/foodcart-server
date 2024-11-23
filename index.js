@@ -57,6 +57,7 @@ async function run() {
     reviewsCollection = db.collection("reviews");
     cartCollection = db.collection("carts");
     orderCollection = db.collection("orders");
+    paymentCollection = db.collection("payments");
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
@@ -225,6 +226,33 @@ app.post('/create-payment-intent', async (req, res) => {
     clientSecret: paymentIntent.client_secret
   })
 });
+
+app.get('/payment/:email', verifyJWT, async (req, res) => {
+  const query = { email: req.params.email }
+  if (req.params.email !== req.decoded.email) {
+    return res.send.status(403).send({message:"Forbidden access"})
+  }
+  const result = await paymentCollection.find(query).toArray();
+  res.send(result);
+})
+
+app.post('/payments', async (req, res) => {
+  const payment = req.body;
+  const paymentResult = await paymentCollection.insertOne(payment);
+  console.log(paymentResult);
+
+  // carefully delete each item from the cart
+  console.log("Payment info")
+  const query = {
+    _id: {
+    $in:payment.cartIds.map(id=>new ObjectId(id))
+    }
+  }
+
+  const deleteResult = await cartCollection.deleteMany(query);
+  
+  res.send({paymentResult, deleteResult});
+})
 
 
 app.get("/", (req, res) => {
