@@ -221,16 +221,17 @@ app.post('/create-payment-intent', async (req, res) => {
     currency: 'usd',
     payment_method_types: ['card']
   });
-  
+
   res.send({
     clientSecret: paymentIntent.client_secret
   })
 });
 
-app.get('/payment/:email', verifyJWT, async (req, res) => {
+
+app.get('/payments', verifyJWT, async (req, res) => {
   const query = { email: req.params.email }
   if (req.params.email !== req.decoded.email) {
-    return res.send.status(403).send({message:"Forbidden access"})
+    return res.status(403).send({ message: "Forbidden access" })
   }
   const result = await paymentCollection.find(query).toArray();
   res.send(result);
@@ -245,13 +246,13 @@ app.post('/payments', async (req, res) => {
   console.log("Payment info")
   const query = {
     _id: {
-    $in:payment.cartIds.map(id=>new ObjectId(id))
+      $in: payment.cartIds.map(id => new ObjectId(id))
     }
   }
 
   const deleteResult = await cartCollection.deleteMany(query);
-  
-  res.send({paymentResult, deleteResult});
+
+  res.send({ paymentResult, deleteResult });
 })
 
 
