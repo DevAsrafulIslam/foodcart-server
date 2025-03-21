@@ -228,7 +228,7 @@ app.post('/create-payment-intent', async (req, res) => {
 });
 
 
-app.get('/payments', verifyJWT, async (req, res) => {
+app.get('/payments/:email', verifyJWT, async (req, res) => {
   const query = { email: req.params.email }
   if (req.params.email !== req.decoded.email) {
     return res.status(403).send({ message: "Forbidden access" })
